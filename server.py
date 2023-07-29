@@ -94,23 +94,28 @@ def delete_employee(id):
 @app.route("/employees/search", methods=["POST"])
 def employee_search():
     request_data = request.get_json()
+
+    # Validate the request data
     fields = request_data.get("fields")
     condition = request_data.get("condition", "AND")
 
     if not fields or not isinstance(fields, list) or len(fields) == 0:
-        return {"message": "At least one search criteria should be passed."}, 400
+        return {"messages": ["At least one search criterion should be passed."]}, 400
 
     errors = validate_filter_criteria(fields)
     if errors:
         return {"messages": errors}, 400
 
+    # Load employee data from the file
     employees_data = get_employee_data()
+
+    # Perform the search
     matched_employees = []
 
-    for employee in employees_data:
-        is_match = evaluate_filter_criteria(employee, fields, condition)
-        if is_match:
-            matched_employees.append(employee)
+    if condition.upper() == "AND":
+        matched_employees = evaluate_filter_criteria_and(employees_data, fields)
+    elif condition.upper() == "OR":
+        matched_employees = evaluate_filter_criteria_or(employees_data, fields)
 
     return jsonify(matched_employees)
 
@@ -130,22 +135,50 @@ def validate_filter_criteria(fields):
 
     return errors
 
-def evaluate_filter_criteria(employee, fields, condition):
-    for criterion in fields:
-        field_name = criterion.get("fieldName")
-        eq_value = criterion.get("eq")
-        neq_value = criterion.get("neq")
+def evaluate_filter_criteria_and(employees_data, fields):
+    matched_employees = []
 
-        if field_name in employee:
-            if eq_value is not None and employee[field_name] != eq_value:
-                return False
-            if neq_value is not None and employee[field_name] == neq_value:
-                return False
-        else:
-            # Field does not exist in the employee data
-            return False
+    for employee in employees_data:
+        is_match = True
+        for criterion in fields:
+            field_name = criterion.get("fieldName")
+            eq_value = criterion.get("eq")
+            neq_value = criterion.get("neq")
 
-    return True if condition == "OR" else False
+            if field_name in employee:
+                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
+                if eq_value is not None and employee_value != eq_value.lower():
+                    is_match = False
+                    break
+                if neq_value is not None and employee_value == neq_value.lower():
+                    is_match = False
+                    break
+            else:
+                # Field does not exist in the employee data
+                is_match = False
+                break
+
+        if is_match:
+            matched_employees.append(employee)
+
+    return matched_employees
+
+def evaluate_filter_criteria_or(employees_data, fields):
+    matched_employees = []
+
+    for employee in employees_data:
+        for criterion in fields:
+            field_name = criterion.get("fieldName")
+            eq_value = criterion.get("eq")
+            neq_value = criterion.get("neq")
+
+            if field_name in employee:
+                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
+                if (eq_value is not None and employee_value == eq_value.lower()) or (neq_value is not None and employee_value != neq_value.lower()):
+                    matched_employees.append(employee)
+                    break
+
+    return matched_employees
 
 if __name__ == '__main__':
     app.run(port=8080,host='0.0.0.0')
