@@ -13,4 +13,4 @@ ENV PATH=/venv/bin:$PATH
 COPY . .
 EXPOSE 8080
 
-ENTRYPOINT ["python3", "server.py"]
+ENTRYPOINT ["python3", "app.py"]
