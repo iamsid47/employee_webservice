@@ -50,14 +50,14 @@ def create_employee():
     }
     employees_data.append(emp_data)
     save_employee_data(employees_data)
-    return {"message": "Success"}
+    return {"employeeId": emp_id}, 201
 
 
 # Get all Employee details
 @app.route('/employees/all', methods=['GET'])
 def get_all_employees():
     employees_data = get_employee_data()
-    return jsonify(employees_data)
+    return jsonify(employees_data), 200
 
 
 # Get Employee details
@@ -66,9 +66,9 @@ def get_employee(id):
     employees_data = get_employee_data()
     for employee in employees_data:
         if employee["employeeId"] == id:
-            return jsonify(employee)
+            return jsonify(employee), 200
 
-    return {"message": "Employee not found"}, 404
+    return {"message": f"Employee {id} not found"}, 404
 
 # Update Employee
 @app.route('/employee/<id>', methods=['PUT'])
@@ -81,9 +81,9 @@ def update_employee(id):
             employee["name"] = request_data["name"]
             employee["city"] = request_data["city"]
             save_employee_data(employees_data)
-            return {"message": "Employee updated successfully"}
+            return jsonify(employee), 201
     
-    return {"message": "Employee not found"}, 404
+    return {"message": f"Employee with {id} was not found"}, 404
 
 # Delete Employee
 @app.route('/employee/<id>', methods=['DELETE'])
