@@ -1,6 +1,17 @@
-from flask import Flask
+from flask import Flask, request
+import json
 
 app = Flask(__name__)
+
+def save_employee_data(emp_data):
+    with open("employees.json", "r") as file:
+        existing_data = json.load(file)
+
+    existing_data.append(emp_data)
+
+    with open("employees.json", "w") as file:
+        json.dump(existing_data, file, indent=4)
+
 
 # Greeting 
 @app.route("/greeting", methods=['GET'])
@@ -10,7 +21,15 @@ def greeting():
 # Create Employee
 @app.route('/employee', methods=['POST'])
 def create_employee():
-    return {}
+    request_data = request.get_json()
+
+    emp_data = {
+        "name": request_data["name"],
+        "city": request_data["city"],
+    }
+    save_employee_data(emp_data)
+    return {"message":"Success!"}
+
 
 # Get all Employee details
 @app.route('/employees/all', methods=['GET'])
