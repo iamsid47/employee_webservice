@@ -90,29 +90,36 @@ def delete_employee(id):
 
     return {"message": f"Employee with {id} was not found"}, 404
 
+def sort_employees_by_name(employees_data):
+    return sorted(employees_data, key=lambda x: x["name"].lower())
+
 #search employee
-@app.route("/employees/search", methods=["POST"])
+@app.route('/employees/search', methods=['POST'])
 def employee_search():
     request_data = request.get_json()
 
+    # Validate the request data
     fields = request_data.get("fields")
     condition = request_data.get("condition", "AND")
 
     if not fields or not isinstance(fields, list) or len(fields) == 0:
-        return {"messages": ["At least one search criteria should be passed."]}, 400
+        return {"messages": ["At least one search criterion should be passed."]}, 400
 
     errors = validate_filter_criteria(fields)
     if errors:
         return {"messages": errors}, 400
 
+    # Load employee data from the file and sort by name
     employees_data = get_employee_data()
+    employees_data = sort_employees_by_name(employees_data)
 
+    # Perform the search using binary search
     matched_employees = []
 
     if condition.upper() == "AND":
-        matched_employees = evaluate_filter_criteria_and(employees_data, fields)
+        matched_employees = evaluate_filter_criteria_and_binary_search(employees_data, fields)
     elif condition.upper() == "OR":
-        matched_employees = evaluate_filter_criteria_or(employees_data, fields)
+        matched_employees = evaluate_filter_criteria_or_binary_search(employees_data, fields)
 
     return jsonify(matched_employees)
 
@@ -132,7 +139,7 @@ def validate_filter_criteria(fields):
 
     return errors
 
-def evaluate_filter_criteria_and(employees_data, fields):
+def evaluate_filter_criteria_and_binary_search(employees_data, fields):
     matched_employees = []
 
     for employee in employees_data:
@@ -143,7 +150,7 @@ def evaluate_filter_criteria_and(employees_data, fields):
             neq_value = criterion.get("neq")
 
             if field_name in employee:
-                employee_value = employee[field_name].lower() 
+                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
                 if eq_value is not None and employee_value != eq_value.lower():
                     is_match = False
                     break
@@ -151,6 +158,7 @@ def evaluate_filter_criteria_and(employees_data, fields):
                     is_match = False
                     break
             else:
+                # Field does not exist in the employee data
                 is_match = False
                 break
 
@@ -159,22 +167,31 @@ def evaluate_filter_criteria_and(employees_data, fields):
 
     return matched_employees
 
-def evaluate_filter_criteria_or(employees_data, fields):
+def evaluate_filter_criteria_or_binary_search(employees_data, fields):
     matched_employees = []
 
-    for employee in employees_data:
-        for criterion in fields:
-            field_name = criterion.get("fieldName")
-            eq_value = criterion.get("eq")
-            neq_value = criterion.get("neq")
+    for criterion in fields:
+        field_name = criterion.get("fieldName")
+        eq_value = criterion.get("eq")
+        neq_value = criterion.get("neq")
 
-            if field_name in employee:
-                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
-                if (eq_value is not None and employee_value == eq_value.lower()) or (neq_value is not None and employee_value != neq_value.lower()):
-                    matched_employees.append(employee)
-                    break
+        # Binary search based on the "name" field
+        left, right = 0, len(employees_data) - 1
+        while left <= right:
+            mid = (left + right) // 2
+            mid_name = employees_data[mid].get("name").lower()
+
+            if eq_value is not None and mid_name == eq_value.lower():
+                matched_employees.append(employees_data[mid])
+                break
+            elif neq_value is not None and mid_name != neq_value.lower():
+                matched_employees.append(employees_data[mid])
+                break
+            elif mid_name < (eq_value or neq_value).lower():
+                left = mid + 1
+            else:
+                right = mid - 1
 
     return matched_employees
-
 if __name__ == '__main__':
     app.run(port=8080,host='0.0.0.0')
