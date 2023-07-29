@@ -18,19 +18,6 @@ def get_employee_data():
         data = []
     return data
 
-class RandomNumberGenerator:
-    def __init__(self):
-        self.numbers = list(range(1, 1001))
-        random.shuffle(self.numbers)
-
-    def generate_random_number(self):
-        if not self.numbers:
-            self.numbers = list(range(1, 1001))
-            random.shuffle(self.numbers)
-
-        return self.numbers.pop()
-rng = RandomNumberGenerator()
-
 # Greeting 
 @app.route("/greeting", methods=['GET'])
 def greeting():
@@ -42,7 +29,7 @@ def create_employee():
     request_data = request.get_json()
     employees_data = get_employee_data()
     
-    emp_id = rng.generate_random_number()
+    emp_id = random.randint(1,1000)
     emp_data = {
         "employeeId": str(emp_id),
         "name": request_data["name"],
