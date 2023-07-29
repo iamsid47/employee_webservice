@@ -170,27 +170,23 @@ def evaluate_filter_criteria_and_binary_search(employees_data, fields):
 def evaluate_filter_criteria_or_binary_search(employees_data, fields):
     matched_employees = []
 
-    for criterion in fields:
-        field_name = criterion.get("fieldName")
-        eq_value = criterion.get("eq")
-        neq_value = criterion.get("neq")
+    for employee in employees_data:
+        is_match = False
+        for criterion in fields:
+            field_name = criterion.get("fieldName")
+            eq_value = criterion.get("eq")
+            neq_value = criterion.get("neq")
 
-        # Binary search based on the "name" field
-        left, right = 0, len(employees_data) - 1
-        while left <= right:
-            mid = (left + right) // 2
-            mid_name = employees_data[mid].get("name").lower()
-
-            if eq_value is not None and mid_name == eq_value.lower():
-                matched_employees.append(employees_data[mid])
-                break
-            elif neq_value is not None and mid_name != neq_value.lower():
-                matched_employees.append(employees_data[mid])
-                break
-            elif mid_name < (eq_value or neq_value).lower():
-                left = mid + 1
-            else:
-                right = mid - 1
+            if field_name in employee:
+                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
+                if eq_value is not None and employee_value == eq_value.lower():
+                    is_match = True
+                    break
+                if neq_value is not None and employee_value != neq_value.lower():
+                    is_match = True
+                    break
+        if is_match:
+            matched_employees.append(employee)
 
     return matched_employees
 
