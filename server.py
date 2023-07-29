@@ -91,7 +91,7 @@ def delete_employee(id):
     return {"message": f"Employee with {id} was not found"}, 404
 
 #search employee
-@app.route("/employee/search", methods=["POST"])
+@app.route("/employees/search", methods=["POST"])
 def employee_search():
     request_data = request.get_json()
     fields = request_data.get("fields")
