@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "employeeId": "1",
+        "name": "Siddhesh",
+        "city": "Nashik"
+    },
+    {
+        "employeeId": "2",
+        "name": "Siddhesh",
+        "city": "Nashik"
+    },
+    {
+        "employeeId": "3",
+        "name": "Sample",
+        "city": "Nashik"
+    },
+    {
+        "employeeId": "4",
+        "name": "Siddhesh",
+        "city": "Nashik"
+    }
+]
