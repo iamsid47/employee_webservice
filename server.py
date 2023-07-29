@@ -50,7 +50,7 @@ def create_employee():
     }
     employees_data.append(emp_data)
     save_employee_data(employees_data)
-    return {"employeeId": emp_id}, 201
+    return {"employeeId": str(emp_id)}, 201
 
 
 # Get all Employee details
