@@ -99,19 +99,23 @@ def delete_employee(id):
     if found_employee:
         employees_data.remove(found_employee)
         save_employee_data(employees_data)
-        return {"message": "Employee deleted successfully"}
+        return jsonify(found_employee), 200
 
-    return {"message": "Employee not found"}, 404
+    return {"message": f"Employee with {id} was not found"}, 404
 
 #search employee
 @app.route("/employee/search", methods=["POST"])
 def employee_search():
     request_data = request.get_json()
-    fields = request_data.get("fields", [])
+    fields = request_data.get("fields")
     condition = request_data.get("condition", "AND")
 
-    if not fields:
-        return {"message": "Fields are required for search"}, 400
+    if not fields or not isinstance(fields, list) or len(fields) == 0:
+        return {"message": "At least one search criteria should be passed."}, 400
+
+    errors = validate_filter_criteria(fields)
+    if errors:
+        return {"messages": errors}, 400
 
     employees_data = get_employee_data()
     matched_employees = []
@@ -122,6 +126,22 @@ def employee_search():
             matched_employees.append(employee)
 
     return jsonify(matched_employees)
+
+def validate_filter_criteria(fields):
+    errors = []
+    for criterion in fields:
+        field_name = criterion.get("fieldName")
+        if not field_name:
+            errors.append("fieldName must be set.")
+
+        eq_value = criterion.get("eq")
+        neq_value = criterion.get("neq")
+        if eq_value is None and neq_value is None:
+            errors.append(f"{field_name}: At least one of eq, neq must be set.")
+        elif eq_value is not None and neq_value is not None:
+            errors.append(f"{field_name}: Only one of eq, neq should be set, not both.")
+
+    return errors
 
 def evaluate_filter_criteria(employee, fields, condition):
     for criterion in fields:
