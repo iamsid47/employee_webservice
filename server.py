@@ -169,7 +169,7 @@ def evaluate_filter_criteria_or(employees_data, fields):
             neq_value = criterion.get("neq")
 
             if field_name in employee:
-                employee_value = employee[field_name].lower()  
+                employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
                 if (eq_value is not None and employee_value == eq_value.lower()) or (neq_value is not None and employee_value != neq_value.lower()):
                     matched_employees.append(employee)
                     break
