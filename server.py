@@ -140,30 +140,30 @@ def validate_filter_criteria(fields):
     return errors
 
 def evaluate_filter_criteria_and_binary_search(employees_data, fields):
-    matched_employees = []
+    matched_employees = employees_data
 
-    for employee in employees_data:
-        is_match = True
-        for criterion in fields:
-            field_name = criterion.get("fieldName")
-            eq_value = criterion.get("eq")
-            neq_value = criterion.get("neq")
+    for criterion in fields:
+        field_name = criterion.get("fieldName")
+        eq_value = criterion.get("eq")
+        neq_value = criterion.get("neq")
 
+        temp_matched_employees = []
+        for employee in matched_employees:
+            is_match = True
             if field_name in employee:
                 employee_value = employee[field_name].lower()  # Convert to lowercase for case-insensitive comparison
                 if eq_value is not None and employee_value != eq_value.lower():
                     is_match = False
-                    break
                 if neq_value is not None and employee_value == neq_value.lower():
                     is_match = False
-                    break
             else:
                 # Field does not exist in the employee data
                 is_match = False
-                break
 
-        if is_match:
-            matched_employees.append(employee)
+            if is_match:
+                temp_matched_employees.append(employee)
+
+        matched_employees = temp_matched_employees
 
     return matched_employees
 
@@ -193,5 +193,6 @@ def evaluate_filter_criteria_or_binary_search(employees_data, fields):
                 right = mid - 1
 
     return matched_employees
+
 if __name__ == '__main__':
     app.run(port=8080,host='0.0.0.0')
