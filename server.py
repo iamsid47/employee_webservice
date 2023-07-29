@@ -1,6 +1,5 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 import json
-import random
 
 app = Flask(__name__)
 
@@ -43,12 +42,19 @@ def create_employee():
 # Get all Employee details
 @app.route('/employees/all', methods=['GET'])
 def get_all_employees():
-    return []
+    employees_data = get_employee_data()
+    return jsonify(employees_data)
+
 
 # Get Employee details
 @app.route('/employee/<id>', methods=['GET'])
 def get_employee(id):
-    return {}
+    employees_data = get_employee_data()
+    for employee in employees_data:
+        if employee["employeeId"] == id:
+            return jsonify(employee)
+
+    return {"message": "Employee not found"}, 404
 
 # Update Employee
 @app.route('/employee/<id>', methods=['PUT'])
@@ -68,7 +74,27 @@ def update_employee(id):
 # Delete Employee
 @app.route('/employee/<id>', methods=['DELETE'])
 def delete_employee(id):
-    return {}
+    employees_data = get_employee_data()
+    found_employee = None
+
+    for employee in employees_data:
+        if employee["employeeId"] == id:
+            found_employee = employee
+            break
+
+    if found_employee:
+        last_employee = employees_data[-1]
+        last_employee_id = int(last_employee["employeeId"])
+        found_employee["employeeId"] = str(last_employee_id - 1)
+
+        employees_data.remove(last_employee)
+
+        employees_data.sort(key=lambda x: int(x["employeeId"]))
+
+        save_employee_data(employees_data)
+        return {"message": "Employee deleted successfully"}
+
+    return {"message": "Employee not found"}, 404
 
 
 if __name__ == '__main__':
