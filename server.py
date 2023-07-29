@@ -68,7 +68,7 @@ def get_employee(id):
         if employee["employeeId"] == id:
             return jsonify(employee), 200
 
-    return {"message": f"Employee {id} not found"}, 404
+    return {"message": f"Employee {id} was not found"}, 404
 
 # Update Employee
 @app.route('/employee/<id>', methods=['PUT'])
