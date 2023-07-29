@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import json
+import random
 
 app = Flask(__name__)
 
@@ -17,6 +18,19 @@ def get_employee_data():
         data = []
     return data
 
+class RandomNumberGenerator:
+    def __init__(self):
+        self.numbers = list(range(1, 1001))
+        random.shuffle(self.numbers)
+
+    def generate_random_number(self):
+        if not self.numbers:
+            self.numbers = list(range(1, 1001))
+            random.shuffle(self.numbers)
+
+        return self.numbers.pop()
+rng = RandomNumberGenerator()
+
 # Greeting 
 @app.route("/greeting", methods=['GET'])
 def greeting():
@@ -28,7 +42,7 @@ def create_employee():
     request_data = request.get_json()
     employees_data = get_employee_data()
     
-    emp_id = len(employees_data) + 1
+    emp_id = rng.generate_random_number()
     emp_data = {
         "employeeId": str(emp_id),
         "name": request_data["name"],
@@ -83,19 +97,48 @@ def delete_employee(id):
             break
 
     if found_employee:
-        last_employee = employees_data[-1]
-        last_employee_id = int(last_employee["employeeId"])
-        found_employee["employeeId"] = str(last_employee_id - 1)
-
-        employees_data.remove(last_employee)
-
-        employees_data.sort(key=lambda x: int(x["employeeId"]))
-
+        employees_data.remove(found_employee)
         save_employee_data(employees_data)
         return {"message": "Employee deleted successfully"}
 
     return {"message": "Employee not found"}, 404
 
+#search employee
+@app.route("/employee/search", methods=["POST"])
+def employee_search():
+    request_data = request.get_json()
+    fields = request_data.get("fields", [])
+    condition = request_data.get("condition", "AND")
+
+    if not fields:
+        return {"message": "Fields are required for search"}, 400
+
+    employees_data = get_employee_data()
+    matched_employees = []
+
+    for employee in employees_data:
+        is_match = evaluate_filter_criteria(employee, fields, condition)
+        if is_match:
+            matched_employees.append(employee)
+
+    return jsonify(matched_employees)
+
+def evaluate_filter_criteria(employee, fields, condition):
+    for criterion in fields:
+        field_name = criterion.get("fieldName")
+        eq_value = criterion.get("eq")
+        neq_value = criterion.get("neq")
+
+        if field_name in employee:
+            if eq_value is not None and employee[field_name] != eq_value:
+                return False
+            if neq_value is not None and employee[field_name] == neq_value:
+                return False
+        else:
+            # Field does not exist in the employee data
+            return False
+
+    return True if condition == "OR" else False
 
 if __name__ == '__main__':
     app.run(port=8080,host='0.0.0.0')
