@@ -191,4 +191,4 @@ def evaluate_filter_criteria_or_binary_search(employees_data, fields):
     return matched_employees
 
 if __name__ == '__main__':
-    app.run(port=8080,host='0.0.0.0')
+    app.run(port=8080,host='0.0.0.0', threaded=True)
