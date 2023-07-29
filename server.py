@@ -100,7 +100,7 @@ def employee_search():
     condition = request_data.get("condition", "AND")
 
     if not fields or not isinstance(fields, list) or len(fields) == 0:
-        return {"messages": ["At least one search criterion should be passed."]}, 400
+        return {"messages": ["At least one search criteria should be passed."]}, 400
 
     errors = validate_filter_criteria(fields)
     if errors:
